@@ -1,0 +1,163 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: firecrawl
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/startup-cpu-boost: "true"
+        # Adjust resources as needed
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: YOUR_SERVICE_ACCOUNT@YOUR_PROJECT.iam.gserviceaccount.com
+      containers:
+        # Main API container (ingress)
+        - name: api
+          image: gcr.io/YOUR_PROJECT/firecrawl-api:latest
+          ports:
+            - name: http1
+              containerPort: 3002
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: UPSTASH_REDIS_URL
+            - name: REDIS_RATE_LIMIT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: UPSTASH_REDIS_URL
+            - name: PLAYWRIGHT_MICROSERVICE_URL
+              value: "http://localhost:3000"
+            - name: PORT
+              value: "3002"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: NUM_WORKERS_PER_QUEUE
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: NUM_WORKERS_PER_QUEUE
+            - name: BULL_AUTH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: BULL_AUTH_KEY
+            - name: TEST_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: TEST_API_KEY
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: MAX_RAM
+              value: "0.95"
+            - name: MAX_CPU
+              value: "0.95"
+          resources:
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            periodSeconds: 30
+
+        # Worker container (sidecar)
+        - name: worker
+          image: gcr.io/YOUR_PROJECT/firecrawl-api:latest
+          args: ["pnpm", "run", "workers"]
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: UPSTASH_REDIS_URL
+            - name: REDIS_RATE_LIMIT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: UPSTASH_REDIS_URL
+            - name: PLAYWRIGHT_MICROSERVICE_URL
+              value: "http://localhost:3000"
+            - name: PORT
+              value: "3002"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: NUM_WORKERS_PER_QUEUE
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: NUM_WORKERS_PER_QUEUE
+            - name: BULL_AUTH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: BULL_AUTH_KEY
+            - name: TEST_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: TEST_API_KEY
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: MAX_RAM
+              value: "0.95"
+            - name: MAX_CPU
+              value: "0.95"
+          resources:
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+
+        # Puppeteer service (sidecar)
+        - name: puppeteer-service
+          image: gcr.io/YOUR_PROJECT/puppeteer-service:latest
+          env:
+            - name: PORT
+              value: "3000"
+            - name: PROXY_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: PROXY_SERVER
+            - name: PROXY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: PROXY_USERNAME
+            - name: PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: PROXY_PASSWORD
+            - name: TWOCAPTCHA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-secrets
+                  key: TWOCAPTCHA_TOKEN
+            - name: MAX_CONCURRENCY
+              value: "5"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
