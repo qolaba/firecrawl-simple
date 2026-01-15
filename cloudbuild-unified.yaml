@@ -41,24 +41,8 @@ steps:
       - '--cpu-boost'
       - '--execution-environment=gen2'
       - '--allow-unauthenticated'
-      # Environment variables
-      - '--set-env-vars=PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000'
-      - '--set-env-vars=PUPPETEER_SERVICE_PORT=3000'
-      - '--set-env-vars=HOST=0.0.0.0'
-      - '--set-env-vars=LOGGING_LEVEL=info'
-      - '--set-env-vars=MAX_RAM=0.95'
-      - '--set-env-vars=MAX_CPU=0.95'
-      - '--set-env-vars=MAX_CONCURRENCY=5'
-      # Secrets (update secret names as needed)
-      - '--set-secrets=REDIS_URL=firecrawl-secrets:UPSTASH_REDIS_URL'
-      - '--set-secrets=REDIS_RATE_LIMIT_URL=firecrawl-secrets:UPSTASH_REDIS_URL'
-      - '--set-secrets=NUM_WORKERS_PER_QUEUE=firecrawl-secrets:NUM_WORKERS_PER_QUEUE'
-      - '--set-secrets=BULL_AUTH_KEY=firecrawl-secrets:BULL_AUTH_KEY'
-      - '--set-secrets=TEST_API_KEY=firecrawl-secrets:TEST_API_KEY'
-      - '--set-secrets=PROXY_SERVER=firecrawl-secrets:PROXY_SERVER'
-      - '--set-secrets=PROXY_USERNAME=firecrawl-secrets:PROXY_USERNAME'
-      - '--set-secrets=PROXY_PASSWORD=firecrawl-secrets:PROXY_PASSWORD'
-      - '--set-secrets=TWOCAPTCHA_TOKEN=firecrawl-secrets:TWOCAPTCHA_TOKEN'
+      # Environment variables (uses --update-env-vars to preserve Cloud Run console values)
+      - '--update-env-vars=PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000,PUPPETEER_SERVICE_PORT=3000,HOST=0.0.0.0,LOGGING_LEVEL=info,MAX_RAM=0.95,MAX_CPU=0.95,MAX_CONCURRENCY=5,NUM_WORKERS_PER_QUEUE=1,BULL_AUTH_KEY=admin,USE_DB_AUTHENTICATION=false'
 
 images:
   - 'gcr.io/$PROJECT_ID/firecrawl-unified:$COMMIT_SHA'

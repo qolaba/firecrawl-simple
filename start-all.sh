@@ -26,11 +26,16 @@ PUPPETEER_PID=$!
 echo "Waiting for Puppeteer Service to be ready..."
 sleep 5
 
-# Start Worker in background
-echo "Starting Worker..."
-cd /app/api
-node dist/src/services/queue-worker.js &
-WORKER_PID=$!
+# Start Worker in background (only if REDIS_URL is set)
+if [ -n "$REDIS_URL" ]; then
+  echo "Starting Worker..."
+  cd /app/api
+  node dist/src/services/queue-worker.js &
+  WORKER_PID=$!
+else
+  echo "Skipping Worker (no REDIS_URL configured)"
+  WORKER_PID=""
+fi
 
 # Start API server in foreground
 echo "Starting API Server on port $API_PORT..."
@@ -40,7 +45,9 @@ API_PID=$!
 
 echo "All services started!"
 echo "  - Puppeteer Service: PID $PUPPETEER_PID (port $PUPPETEER_SERVICE_PORT)"
-echo "  - Worker: PID $WORKER_PID"
+if [ -n "$WORKER_PID" ]; then
+  echo "  - Worker: PID $WORKER_PID"
+fi
 echo "  - API: PID $API_PID (port $API_PORT)"
 
 # Wait for any process to exit
