@@ -1,0 +1,42 @@
+# Docker Compose for unified Firecrawl deployment (single container + Redis)
+name: firecrawl-unified
+
+services:
+  firecrawl:
+    build:
+      context: .
+      dockerfile: Dockerfile.unified
+    ports:
+      - "3002:3002"
+    environment:
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - REDIS_RATE_LIMIT_URL=${REDIS_URL:-redis://redis:6379}
+      - PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000
+      - PORT=3002
+      - PUPPETEER_SERVICE_PORT=3000
+      - HOST=0.0.0.0
+      - NUM_WORKERS_PER_QUEUE=${NUM_WORKERS_PER_QUEUE:-8}
+      - BULL_AUTH_KEY=${BULL_AUTH_KEY}
+      - TEST_API_KEY=${TEST_API_KEY}
+      - LOGGING_LEVEL=${LOGGING_LEVEL:-info}
+      - MAX_RAM=${MAX_RAM:-0.95}
+      - MAX_CPU=${MAX_CPU:-0.95}
+      - PROXY_SERVER=${PROXY_SERVER}
+      - PROXY_USERNAME=${PROXY_USERNAME}
+      - PROXY_PASSWORD=${PROXY_PASSWORD}
+      - TWOCAPTCHA_TOKEN=${TWOCAPTCHA_TOKEN}
+      - MAX_CONCURRENCY=${MAX_CONCURRENCY:-5}
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  redis:
+    image: redis:alpine
+    networks:
+      - backend
+    command: redis-server --bind 0.0.0.0
+
+networks:
+  backend:
+    driver: bridge
