@@ -41,8 +41,10 @@ steps:
       - '--cpu-boost'
       - '--execution-environment=gen2'
       - '--allow-unauthenticated'
+      # Remove old secret references that no longer exist
+      - '--remove-secrets=REDIS_URL,REDIS_RATE_LIMIT_URL,NUM_WORKERS_PER_QUEUE,BULL_AUTH_KEY,TEST_API_KEY,PROXY_SERVER,PROXY_USERNAME,PROXY_PASSWORD,TWOCAPTCHA_TOKEN'
       # Environment variables (uses --update-env-vars to preserve Cloud Run console values)
-      - '--update-env-vars=PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000,PUPPETEER_SERVICE_PORT=3000,HOST=0.0.0.0,LOGGING_LEVEL=info,MAX_RAM=0.95,MAX_CPU=0.95,MAX_CONCURRENCY=5,USE_DB_AUTHENTICATION=false'
+      - '--update-env-vars=PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000,PUPPETEER_SERVICE_PORT=3000,HOST=0.0.0.0,LOGGING_LEVEL=info,MAX_RAM=0.95,MAX_CPU=0.95,MAX_CONCURRENCY=5,USE_DB_AUTHENTICATION=false,NUM_WORKERS_PER_QUEUE=1,BULL_AUTH_KEY=admin'
 
 images:
   - 'gcr.io/$PROJECT_ID/firecrawl-unified:$COMMIT_SHA'
