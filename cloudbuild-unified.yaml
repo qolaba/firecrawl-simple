@@ -43,7 +43,6 @@ steps:
       - '--allow-unauthenticated'
       # Environment variables
       - '--set-env-vars=PLAYWRIGHT_MICROSERVICE_URL=http://localhost:3000'
-      - '--set-env-vars=PORT=3002'
       - '--set-env-vars=PUPPETEER_SERVICE_PORT=3000'
       - '--set-env-vars=HOST=0.0.0.0'
       - '--set-env-vars=LOGGING_LEVEL=info'
